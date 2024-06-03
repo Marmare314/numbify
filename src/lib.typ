@@ -86,11 +86,11 @@
 /// - numbering (str, function, array): If the numbering is a string or a function,
 ///   the numbering will be applied to the concatenation of the two arrays.
 ///   If the numbering is an array of two numberings, each numbering will be applied
-///   to the corresponding array and the results will be joined using the seperator.
-/// - seperator (content): In case of an array-numbering, this seperator is used to join the individual numberings.
+///   to the corresponding array and the results will be joined using the separator.
+/// - separator (content): In case of an array-numbering, this separator is used to join the individual numberings.
 /// - ..numbers (array): Either a sequence of integers or two arrays of integers.
 /// -> function
-#let numbify-numbering(numbering, seperator: ".", ..numbers) = {
+#let numbify-numbering(numbering, separator: ".", ..numbers) = {
   // TODO: make the logic easier and safer
   assert(numbers.named().len() == 0, message: "TODO")
   assert(numbers.pos().len() > 0, message: "TODO")
@@ -105,7 +105,7 @@
 
     numbering.zip(numbers).map(
       ((f, n)) => numbify-numbering(f, ..n)
-    ).join(seperator)
+    ).join(separator)
   }
 }
 
@@ -117,11 +117,11 @@
 ///
 /// - counter (counter-like, numbify-counter): The new counter.
 /// - numbering (str, function, array): The numbering that will be applied to the counter.
-/// - seperator (content): The seperator that will be used to join the individual numberings
+/// - separator (content): The separator that will be used to join the individual numberings
 ///   in case of an array-numbering.
 /// -> function
-#let override-counter(counter, numbering, seperator: ".") = {
-  (..) => { numbify-numbering(numbering, seperator: seperator, ..counter-get(counter)) }
+#let override-counter(counter, numbering, separator: ".") = {
+  (..) => { numbify-numbering(numbering, separator: separator, ..counter-get(counter)) }
 }
 
 /// Returns a selector that selects a range of heading levels.
