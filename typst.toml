@@ -1,0 +1,9 @@
+[package]
+name = "numbify"
+version = "0.1.0"
+entrypoint = "src/lib.typ"
+authors = ["Marmare314"]
+license = "GPL-3.0-only"
+description = "Provides utilities for modifying counters, allowing more complex numberings."
+repository = "https://github.com/Marmare314/numbify"
+compiler = "0.11.1"
