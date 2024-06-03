@@ -1,6 +1,7 @@
 #import "@preview/tidy:0.3.0"
 
 #set heading(numbering: "1.1")
+#show link: it => underline(text(blue, it), offset: 0.1em)
 
 = Function Documentation
 #set heading(numbering: none)
@@ -8,9 +9,7 @@
 #let colors = (
   ..tidy.styles.default.colors,
   counter-like: rgb(0, 255, 255, 50),
-  counter: rgb(0, 0, 0, 255),
-  numbify-counter: rgb(0, 0, 0, 255),
-  any: rgb(0, 0, 0, 255),
+  numbify-counter: rgb(255, 255, 0, 50),
 )
 
 #let docs-lib = tidy.parse-module(read("/src/lib.typ"))

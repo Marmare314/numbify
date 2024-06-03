@@ -7,7 +7,7 @@
 ///
 /// - arg (any):
 /// -> boolean
-#let is-counter-operation(arg) = {
+#let is-numbify-counter(arg) = {
   type(arg) == dictionary and "id" in arg.keys() and arg.id == NUMBIFY-OBJECT-ID
 }
 
@@ -16,7 +16,7 @@
 /// - arg (any):
 /// -> boolean
 #let is-concat-counter(arg) = {
-  is-counter-operation(arg) and arg.op == "concat"
+  is-numbify-counter(arg) and arg.op == "concat"
 }
 
 /// Checks if the argument was constructed by the `slice-counter` operation.
@@ -24,26 +24,31 @@
 /// - arg (any):
 /// -> boolean
 #let is-slice-counter(arg) = {
-  is-counter-operation(arg) and arg.op == "slice"
+  is-numbify-counter(arg) and arg.op == "slice"
 }
 
-/// Checks if the argument is either a `counter` or the result of a counter-operation.
-///
-/// - arg (any):
-/// -> boolean
-#let is-numbify-counter(arg) = {
-  type(arg) == counter or is-counter-operation(arg)
-}
-
-/// Turns a `counter-like` into a `numbify-counter` by constructing the counter from the argument if necessary.
-/// A `counter-like` is a `counter`, something that a `counter` can be constructed from or the result of a counter-operation.
+/// Turns a `counter-like` into a `counter` by constructing the counter from the argument if necessary.
+/// A `counter-like` is a `counter` or something that a `counter` can be constructed from.
 ///
 /// - counter (counter-like):
-/// -> numbify-counter
+/// -> counter
 #let from-counter-like(counter) = {
-  if is-numbify-counter(counter) {
+  if type(counter) == std.counter {
     counter
   } else {
     (std.counter)(counter)
+  }
+}
+
+/// Convert argument into `counter` or `numbify-counter`.
+/// If the argument is a `numbify-counter`, it is returned as is.
+/// Otherwise, the argument is converted into a `counter` if necessary.
+///
+/// - counter (counter-like, numbify-counter):
+#let from-counter-like-or-numbify(counter) = {
+  if is-numbify-counter(counter) {
+    counter
+  } else {
+    from-counter-like(counter)
   }
 }

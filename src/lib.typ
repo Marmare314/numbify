@@ -1,31 +1,33 @@
 #import "util.typ": *
 
-/// Concatenate two counter-like objects.
-/// The state can be obtained using `counter-at()`.
+/// Concatenate two counters.
+/// The state of the resulting counter, obtained by `counter-at()`,
+/// is an array of both states.
 ///
-/// - counter-1 (counter-like):
-/// - counter-2 (counter-like):
+/// - counter-1 (counter-like, numbify-counter):
+/// - counter-2 (counter-like, numbify-counter):
 /// -> numbify-counter
 #let concat-counter(counter-1, counter-2) = {
   (
     id: NUMBIFY-OBJECT-ID,
     op: "concat",
-    counter-1: from-counter-like(counter-1),
-    counter-2: from-counter-like(counter-2)
+    counter-1: from-counter-like-or-numbify(counter-1),
+    counter-2: from-counter-like-or-numbify(counter-2)
   )
 }
 
-/// Slice a counter-like object.
-/// The state can be obtained using `counter-at()`.
+/// Slices a range of levels from a counter.
+/// The state of the resulting counter can be obtained using `counter-at()`.
 ///
-/// - end (integer, none): The end-level of the slice (inclusive). If none, the slice goes to the last level of the counter.
+/// - end (integer, none): The end-level of the slice (inclusive).
+///   If `none`, the slice goes to the last level of the counter.
 /// - start (integer): The start-level of the slice.
 /// - counter (counter-like):
 /// -> numbify-counter
 #let slice-counter(counter, end, start: 1) = {
-  assert(1 <= start, message: "the start level must be at least 1")
+  assert(1 <= start, message: "start must be at least 1")
   if end != none {
-    assert(start <= end, message: "the start level must be less than or equal to the end level")
+    assert(start <= end, message: "start must be less than or equal to end")
   }
 
   (
@@ -37,17 +39,16 @@
   )
 }
 
-/// Retrieves the value of the `counter-like` at the given location.
+/// Retrieves the value of a `counter-like` or `numbify-counter` at the given location.
 /// Behaves similar to #link("https://typst.app/docs/reference/introspection/counter/#definitions-at")[`counter.at()`].
-/// For concatenated counters an array of both states is returned.
 ///
 /// _This function is contextual._
 ///
-/// - counter (counter-like):
+/// - counter (counter-like, numbify-counter):
 /// - selector (label, selector, location, function): The place at which the counter's value should be retrieved.
 /// -> array
 #let counter-at(counter, selector) = {
-  counter = from-counter-like(counter)
+  counter = from-counter-like-or-numbify(counter)
 
   if type(counter) == std.counter {
     counter.at(selector)
@@ -71,22 +72,26 @@
 ///
 /// _This function is contextual._
 ///
-/// - counter (counter-like):
+/// - counter (counter-like, numbify-counter):
 /// -> array
 #let counter-get(counter) = {
   counter-at(counter, here())
 }
 
-/// Applies a numbering to the state of a numbify-counter.
-/// Similar to #link("https://typst.app/docs/reference/model/numbering/")[`numbering()`].
+/// Applies a numbering to a sequence of integers or two arrays of integers.
+/// It behaves like #link("https://typst.app/docs/reference/model/numbering/")[`numbering()`]
+/// for a sequence of integers. The rest of the documentation for this function
+/// therefore only describes the behaviour when two arrays of integers are provided.
 ///
-/// - numbering (str, function, array): If a string or function is provided,
-///   the numbering is applied to the combined state of all counters. If an array is provided,
-///   the numbering is applied to each counter individually and then concatenated.
-/// - seperator (content): In case of an array numbering, this seperator is used to join the individual numberings.
-/// - ..numbers (array): The state of the numbify-counter.
+/// - numbering (str, function, array): If the numbering is a string or a function,
+///   the numbering will be applied to the concatenation of the two arrays.
+///   If the numbering is an array of two numberings, each numbering will be applied
+///   to the corresponding array and the results will be joined using the seperator.
+/// - seperator (content): In case of an array-numbering, this seperator is used to join the individual numberings.
+/// - ..numbers (array): Either a sequence of integers or two arrays of integers.
 /// -> function
 #let numbify-numbering(numbering, seperator: ".", ..numbers) = {
+  // TODO: make the logic easier and safer
   assert(numbers.named().len() == 0, message: "TODO")
   assert(numbers.pos().len() > 0, message: "TODO")
   numbers = numbers.pos()
@@ -96,6 +101,7 @@
   } else if type(numbering) == array {
     assert(numbering.len() == 2, message: "TODO")
     assert(numbers.len() == 2, message: "TODO")
+    // TODO: make sure that numbers is an array of arrays
 
     numbering.zip(numbers).map(
       ((f, n)) => numbify-numbering(f, ..n)
@@ -109,9 +115,10 @@
 ///
 /// _The returned function is contextual._
 ///
-/// - counter (counter-like): The new counter.
+/// - counter (counter-like, numbify-counter): The new counter.
 /// - numbering (str, function, array): The numbering that will be applied to the counter.
-/// - seperator (content): The seperator that will be used to join the individual numberings.
+/// - seperator (content): The seperator that will be used to join the individual numberings
+///   in case of an array-numbering.
 /// -> function
 #let override-counter(counter, numbering, seperator: ".") = {
   (..) => { numbify-numbering(numbering, seperator: seperator, ..counter-get(counter)) }
@@ -119,8 +126,8 @@
 
 /// Returns a selector that selects a range of heading levels.
 ///
-/// - end (integer): The end level (inclusive).
-/// - start (integer): The start level (inclusive).
+/// - end (integer): The end-level (inclusive).
+/// - start (integer): The start-level (inclusive).
 /// -> selector
 #let heading-level-range(end, start: 1) = {
   assert(start <= end, message: "the start level must be less than or equal to the end level")
@@ -135,18 +142,16 @@
 /// Reset the counter.
 /// The update only occurs if the resulting content is put into the document.
 ///
-/// counter (counter, str, label, selector, location, function): TODO
+/// counter (counter-like):
 /// -> content
 #let reset-counter(counter) = {
-  assert(not is-counter-operation(counter), message: "the counter must not be a counter operation")
-
   from-counter-like(counter).update(0)
 }
 
 /// Reset the counter.
 /// This is a helper function that can be used in a show-rule.
 ///
-/// - counter (counter, str, label, selector, location, function): TODO
+/// - counter (counter-like):
 /// -> function
 #let reset-counter-rule(counter) = {
   it => {
