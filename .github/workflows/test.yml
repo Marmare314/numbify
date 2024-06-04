@@ -26,9 +26,5 @@ jobs:
         with:
           version: 'v0.11.0'
 
-  tests:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
       - name: Run test suite
         run: typst-test run
