@@ -56,13 +56,9 @@
     (counter-at(counter.counter-1, selector), counter-at(counter.counter-2, selector))
   } else if is-slice-counter(counter) {
     let numbers = counter-at(counter.counter, selector)
+    let end = if counter.end != none { calc.min(counter.end, numbers.len()) }
 
-    if counter.end == none {
-      counter-at(counter.counter, selector).slice(counter.start - 1)
-    } else {
-      let end = calc.min(counter.end, numbers.len())
-      counter-at(counter.counter, selector).slice(counter.start - 1, end)
-    }
+    counter-at(counter.counter, selector).slice(counter.start - 1, end)
   }
 }
 
@@ -78,34 +74,31 @@
   counter-at(counter, here())
 }
 
-/// Applies a numbering to a sequence of integers or two arrays of integers.
-/// It behaves like #link("https://typst.app/docs/reference/model/numbering/")[`numbering()`]
-/// for a sequence of integers. The rest of the documentation for this function
-/// therefore only describes the behaviour when two arrays of integers are provided.
+/// Applies a numbering to the value of a `counter-like` or `numbify-counter`.
+/// Since this function behaves similarly to #link("https://typst.app/docs/reference/model/numbering/")[`numbering()`]
+/// when provided with the state of a `counter-like`, only the behaviour of this function when provided with the state
+/// of a `numbify-counter` will be described here.
 ///
-/// - numbering (str, function, array): If the numbering is a string or a function,
-///   the numbering will be applied to the concatenation of the two arrays.
-///   If the numbering is an array of two numberings, each numbering will be applied
-///   to the corresponding array and the results will be joined using the separator.
+/// - numbering (str, function, array): This parameter defines the numbering format. If it's a string or a function,
+///   the numbering will be applied to the concatenation of the two states. If it's an array of two numberings,
+///   each numbering will be applied to its corresponding state. The results will then be joined using the separator.
 /// - separator (content): In case of an array-numbering, this separator is used to join the individual numberings.
-/// - ..numbers (array): Either a sequence of integers or two arrays of integers.
+/// - numbers (array): The value of the `counter-like` or `numbify-counter`.
 /// -> function
-#let numbify-numbering(numbering, separator: ".", ..numbers) = {
-  // TODO: make the logic easier and safer
-  assert(numbers.named().len() == 0, message: "TODO")
-  assert(numbers.pos().len() > 0, message: "TODO")
-  numbers = numbers.pos()
+#let numbify-numbering(numbering, numbers, separator: ".") = {
+  assert(type(numbers) == array, message: "expected 'numbers' to be an array of numbers")
+  assert(numbers.len() > 0, message: "expected 'numbers' to be a non-empty array")
 
   if type(numbering) == str or type(numbering) == function {
     (std.numbering)(numbering, ..numbers.flatten())
   } else if type(numbering) == array {
-    assert(numbering.len() == 2, message: "TODO")
-    assert(numbers.len() == 2, message: "TODO")
-    // TODO: make sure that numbers is an array of arrays
+    assert(numbers.len() == numbering.len(), message: "expected 'numbers' and 'numbering' to have the same length")
 
     numbering.zip(numbers).map(
-      ((f, n)) => numbify-numbering(f, ..n)
+      ((x, y)) => numbify-numbering(x, y, separator: separator)
     ).join(separator)
+  } else {
+    panic("expected 'numbering' to be a string, function, or array")
   }
 }
 
@@ -121,7 +114,7 @@
 ///   in case of an array-numbering.
 /// -> function
 #let override-counter(counter, numbering, separator: ".") = {
-  (..) => { numbify-numbering(numbering, separator: separator, ..counter-get(counter)) }
+  (..) => { numbify-numbering(numbering, separator: separator, counter-get(counter)) }
 }
 
 /// Returns a selector that selects a range of heading levels.

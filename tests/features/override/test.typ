@@ -14,6 +14,6 @@
 #counter.update((1, 2, 3))
 === F
 
-#set heading(numbering: override-counter(concat-counter(counter, counter), ("1.1", "I.I"), seperator: "-"))
+#set heading(numbering: override-counter(concat-counter(counter, counter), ("1.1", "I.I"), separator: "-"))
 
 = G
